@@ -1,0 +1,185 @@
+import java.util.*;
+
+class Solution {
+    public static int pos = 0;
+
+    public class Node {
+
+        public HashMap<Character, Node> children = new HashMap<>();
+        public char character = 'a';
+        public boolean isEndOfWord = false;
+    }
+
+    public interface Tree {
+        public Tree insert(String word);
+
+        public boolean contains(String word);
+
+        public void delete(String word);
+
+        public boolean containsPrefix(String prefix);
+
+        public List<String> wordsWithPrefix(String prefix);
+    }
+
+    public class Trie implements Tree {
+        public Node root;
+
+        public Trie() {
+            root = new Node();
+        }
+
+        public Tree insert(String word) {
+            Node currentNode = root;
+            Map<Character, Node> children = root.children;
+            for (char c : word.toCharArray()) {
+                if (children.containsKey(c)) {
+                    currentNode = children.get(c);
+                } else {
+                    currentNode = new Node();
+                    currentNode.character = c;
+                    currentNode.isEndOfWord = false;
+                    children.put(c, currentNode);
+                }
+                children = currentNode.children;
+            }
+            currentNode.isEndOfWord = true;
+            return this;
+        }
+
+        public boolean contains(String word) {
+            Node lastPresentNode = search(word);
+            return lastPresentNode != null && lastPresentNode.isEndOfWord;
+        }
+
+        public Node search(String str) {
+            Node currentNode = null;
+            Map<Character, Node> children = root.children;
+            for (char c : str.toCharArray()) {
+                if (!children.containsKey(c)) {
+                    return null;
+                }
+                currentNode = children.get(c);
+                children = currentNode.children;
+            }
+            return currentNode;
+        }
+
+        public Node search2(String str) {
+            Node currentNode = null;
+            Map<Character, Node> children = root.children;
+            for (char c : str.toCharArray()) {
+                // System.out.print(c+" ");
+                if (!children.containsKey(c)) {
+
+                    return currentNode;
+                }
+                pos++;
+                currentNode = children.get(c);
+                children = currentNode.children;
+            }
+            return currentNode;
+        }
+
+        public void delete(String word) {
+        }
+
+        public boolean containsPrefix(String prefix) {
+            return search(prefix) != null;
+        }
+
+        public List<String> wordsWithPrefix(String prefix) {
+            return null;
+        }
+    }
+
+    public int minExtraChar(String s, String[] dictionary) {
+        int maxer=0;
+        int n = s.length();
+        int dp[] = new int[n];
+        Trie th = new Trie();
+        for (String ch : dictionary) {
+            th.insert(ch);
+        }
+
+        int prev=0;
+        for (int i = 0; i < n; ) {
+            prev=pos;
+            pos = 0;
+            Node np1 = th.search2(s.substring(i, n));
+            Node np2 = th.search(s.substring(i, n));
+
+            if (np1 != null) {
+                if (np1.isEndOfWord==true) {
+                    System.out.println("chos "+np1.character+ " i "+i +" pos "+pos+" ch[i] "+s.charAt(i) +" prev "+prev );
+                    if((i+pos)<n)
+                    {
+                        System.out.println("lowpos "+s.charAt(i+pos)+" i "+i +" pos "+pos+"ch[i]"+s.charAt(i) + " prev "+prev);
+                    }
+                    if(((i-1)>-1) && ((i+pos)<n)&& ((i-prev-1)>-1))
+                    {
+                        dp[i] = dp[i-prev-1];
+                        maxer=Math.max(maxer,dp[i]);
+                        if(dp[i]<maxer)
+                        {
+                            dp[i]=maxer+dp[i];
+                            maxer=Math.max(maxer,dp[i]);
+                        }
+                    }
+                /*    if((i+pos)==(n))
+                    {
+                    //    dp[n-pos]=dp[n-pos]-1;
+                          dp[i]=dp[n-pos]-1;
+                    }*/
+                    i=i+pos;
+                } else {
+                    System.out.println("YES"+s.charAt(i));
+                    if(((i-1)>-1) && ((i+pos)<n) && ((i-prev-1)>-1)) {
+                        dp[i] = dp[i - prev-1] + 1;
+                        maxer=Math.max(maxer,dp[i]);
+                        if(dp[i]<maxer)
+                        {
+                            dp[i]=maxer+dp[i];
+                            maxer=Math.max(maxer,dp[i]);
+                        }
+                        prev=0;
+                        pos=0;
+                    }
+                    else
+                    {
+                        dp[i]=1;
+                    }
+                    i++;
+                }
+            } else {
+                System.out.println("Nullos "+s.charAt(i)+" i "+i+" prev "+prev+" pos "+pos);
+                if(((i-1)>-1) && ((i+pos)<n)&&((i-prev-1)>-1)) {
+                    dp[i] = dp[i - prev-1] +1;
+                    maxer=Math.max(maxer,dp[i]);
+                        if(dp[i]<maxer)
+                        {
+                            dp[i]=maxer+dp[i];
+                            maxer=Math.max(maxer,dp[i]);
+                        }
+                }
+                else
+                {
+                    System.out.print("sox "+s.charAt(i));
+                    dp[i]=1;
+                }
+                i++;
+            }
+        }
+
+        for (int p = 0; p < n; p++) {
+            System.out.print(s.charAt(p) + " ");
+        }
+        System.out.println();
+        int res=0;
+        for (int q = 0; q < n; q++) {
+            System.out.print(dp[q]+" ");
+            res=Math.max(res,dp[q]);
+        }
+        return res;
+    }
+}
